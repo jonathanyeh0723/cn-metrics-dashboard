@@ -1,6 +1,49 @@
 # cn-metrics-dashboard
 Using Prometheus, Jaeger, and Grafana to monitor, trace and visualize the application that is deployed on a Kubernetes cluster.
 
+## Prerequisites
+
+Have vagrant up. Destory existing VM if necessary.
+```
+$ vagrant halt
+$ vagrant destroy
+$ vagrant global-status
+$ vagrant destroy $(vm id)
+$ vagrant ssh
+```
+
+Bring up Helm. Install Prometheus and Jaeger.
+```
+$ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+$ kubectl create namespace monitoring
+$ helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+$ helm repo add stable https://charts.helm.sh/stable
+$ helm repo update
+$ helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --kubeconfig /etc/rancher/k3s/k3s.yaml
+
+$ kubectl --namespace monitoring get pods -l "release=prometheus"
+
+
+$ kubectl create namespace observability
+$ export jaeger_version=v1.28.0
+
+$ kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/crds/jaegertracing.io_jaegers_crd.yaml
+$ kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/service_account.yaml
+$ kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/role.yaml
+$ kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/role_binding.yaml
+$ kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/operator.yaml
+
+$ kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/cluster_role.yaml
+$ kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/cluster_role_binding.yaml
+
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.3/deploy/static/provider/cloud/deploy.yaml
+
+$ kubectl get svc -n observability
+$ kubectl get deploy
+
+```
+
 ## Verify the monitoring installation
 
 Run the following kubectl command to show the running pods and services for all components. 
