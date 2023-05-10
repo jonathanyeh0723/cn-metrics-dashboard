@@ -1,0 +1,10 @@
+Flask
+gunicorn
+jaeger-client
+prometheus-client
+prometheus-flask-exporter
+pylint
+requests
+Flask-Opentracing
+Flask-PyMongo
+flask_cors

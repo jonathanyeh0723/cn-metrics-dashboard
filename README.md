@@ -3,7 +3,7 @@ Using Prometheus, Jaeger, and Grafana to monitor, trace and visualize the applic
 
 ## Prerequisites
 
-Have vagrant up. Destory existing VM if necessary.
+Open a terminal (T1). Have vagrant up. Destory existing VM if necessary.
 ```
 $ vagrant halt
 $ vagrant destroy
@@ -44,6 +44,63 @@ $ kubectl get deploy
 
 ```
 
+Open another terminal (T2). Securely copy the K8s manifest config files to the VM. Deploy the service.
+```
+$ cd cn-metrics-dashboard/manifests/app
+$ vagrant plugin install vagrant-scp
+$ vagrant scp backend.yaml backend.yaml
+$ vagrant scp frontend.yaml frontend.yaml
+$ vagrant scp jaeger-instance.yaml jaeger-instance.yaml
+
+$ vagrant ssh
+$ kubectl apply -f backend.yaml
+$ kubectl apply -f frontend.yaml
+$ kubectl apply -f jaeger-instance.yaml
+```
+
+Once it's done, check all the deployments, services are running.
+```
+$ kubectl get deploy -n monitoring
+$ kubectl get deploy -n observability
+$ kubectl get svc -n observability
+$ kubectl get deploy
+```
+
+We should be able to retrieve the information printed out in the console. 
+```
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+prometheus-kube-state-metrics         1/1     1            1           5m25s
+prometheus-kube-prometheus-operator   1/1     1            1           5m25s
+prometheus-grafana                    1/1     1            1           5m25s
+vagrant@localhost:~> kubectl get deploy -n observability
+NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+jaeger-operator   1/1     1            1           4m23s
+cn-traces         1/1     1            1           113s
+vagrant@localhost:~> kubectl get svc -n observability
+NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                  AGE
+jaeger-operator-metrics        ClusterIP   10.43.237.44    <none>        8383/TCP,8686/TCP                        3m27s
+cn-traces-collector-headless   ClusterIP   None            <none>        9411/TCP,14250/TCP,14267/TCP,14268/TCP   2m2s
+cn-traces-collector            ClusterIP   10.43.79.0      <none>        9411/TCP,14250/TCP,14267/TCP,14268/TCP   2m2s
+cn-traces-query                ClusterIP   10.43.139.171   <none>        16686/TCP,16685/TCP                      2m2s
+cn-traces-agent                ClusterIP   None            <none>        5775/UDP,5778/TCP,6831/UDP,6832/UDP      2m2s
+vagrant@localhost:~> kubectl get deploy
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+frontend-app   3/3     3            3           2m23s
+backend-app    3/3     3            3           2m26s
+```
+
+OK! All done. Let's start to use Prometheus, Grafana, and Jaeger.
+
+In terminal 1, type below command to port forward prometheus-grafana service.
+```
+$ kubectl port-forward -n monitoring svc/prometheus-grafana --address 0.0.0.0 3000:80
+```
+
+Keep going to port forward jaeger tracing service to view in the browser.
+```
+$ kubectl port-forward -n observability service/cn-traces-query --address 0.0.0.0 16686:16686
+```
+
 ## Verify the monitoring installation
 
 Run the following kubectl command to show the running pods and services for all components. 
@@ -51,7 +108,7 @@ Run the following kubectl command to show the running pods and services for all 
 $ kubectl get all -n monitoring
 ```
 
-![img_1](./resources/1-verify_the_monitoring_installation.png)
+![img_1](./answer-img/1_verify_the_monitoring_installation.png)
 
 ## Setup the Jaeger and Prometheus source
 
@@ -60,11 +117,11 @@ Expose Grafana to the internet and then setup Prometheus as a data source.
 $ kubectl port-forward -n monitoring svc/prometheus-grafana --address 0.0.0.0 3000:80
 ```
 
-![img_2](./resources/2-setup_the_Jaeger_and_Prometheus_source.png)
+![img_2](./answer-img/2_setup_the_jaeger_and_prometheus.png)
 
 ## Create a Basic Dashboard
 
-![img_3](./resources/3_Create_a_Basic_Dashboard.png)
+![img_3](./answer-img/3_create_basic_dashboard.png)
 
 See attached.
 
@@ -103,3 +160,4 @@ Concretely, we can address as following:
 5. **Resource utilization**: To measure the amount of resources, such as CPU, memory, and disk space, that the application is using. The purpose is to ensure that the application is not overloading the system and causing performance issues.
 
 By tracking these metrics, you can get a better understanding of how well your application is performing and identify areas for improvement. Do you have any questions about these metrics or how they are used to measure SLIs?
+
