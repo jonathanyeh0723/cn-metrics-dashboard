@@ -173,14 +173,6 @@ Open the browser and navigate to `127.0.0.1:3000` to create the dashboard. Editi
 
 ## Tracing our Flask App
 
-Add Jaeger data source. Test whether it is correctly configured.
-
-![img_5](./answer-img/5-jager-2.png)
-
-Create and edit another panel to literally confirm Jaeger in dashboard.
-
-![img_6](./answer-img/5-jager-1.png)
-
 The Python Jaeger code (screenshot) is as following. The code is located at [reference-app/backend/app.py](https://github.com/jonathanyeh0723/cn-metrics-dashboard/blob/main/reference-app/backend/app.py)
 ```
 import logging
@@ -273,6 +265,79 @@ if __name__ == "__main__":
     app.run(debug=True,)
 ```
 
+Add Jaeger data source. Test whether it is correctly configured.
+
+![img_5](./answer-img/5-jager-2.png)
+
+## Jaeger in Dashboards
+Create and edit another panel to literally confirm Jaeger in dashboard.
+
+![img_6](./answer-img/5-jager-1.png)
+
 Navigate to `127.0.0.1:8088`. This is where we can oversee what we perform Jaeger traces on the backend service.
 
 ![img_4](./answer-img/5_tracing_flask.png)
+
+## Report Error
+
+Using the template below.
+```
+TROUBLE TICKET
+Name:
+Date:
+Subject:
+Affected Area:
+Severity:
+Description:
+```
+-------------------------------------------------------------------------------------------------
+
+TROUBLE TICKET
+
+Name: "Monitoring Iron Dog Logs - 2023/5/9: 400 error event occurred"
+
+Date: 09/05/2023 09:42:13
+
+Subject: 400 Bad Request response. Possible reason might be `/star` endpoint request failed.
+
+Affected Area: Backend service.
+
+Severity: High
+
+Description: Client sending information with HTTP "POST" method to request access `/star` endpoint resulting error response. It is probably because MongoDB database is not available in current Kubernetes cluster. Suggest to configure the manifest and have the service up.
+
+-------------------------------------------------------------------------------------------------
+
+## Creating SLIs and SLOs
+
+- **Uptime**: The service should be up and running for 99.95% at all times on monthly basis.
+- **Saturation**: The average CPU and Memory usage should be lower than 50% per month.
+- **Traffic**: The average application response time should be served within 1000 ms on monthly basis.
+- **Error**: More than 98% of the requests have to be implemented successfully per month.
+
+## Building KPIs for our plan
+
+- **99.95% Uptime**
+  - All of the services and applications should be running without errors for 99.95% of the time in May, 2023.
+  - This KPI indicates successful requests has been made.
+- **The average CPU and Memory consumption is lower than 50%**:
+  - The monthly average CPU and Memory consumption should be lower than 50% in May, 2023.
+  - This KPI shows that how much CPU and Memory resources have been occupied and to guarantee our routine jobs can be done smoothly with the left.
+- **The average response time of the incoming requests can be accomplished within 1000 ms**:
+  - The server can have all the requests served within 1000 ms in May, 2023.
+  - This KPI represents the time of every single request from start to finish user requests.
+- **< 2% total errors**:
+  - The downtime shall be lower than 2% in May, 2023.
+  - This KPIs promises all the services and applications are usually in healthy state.
+
+## Final Dashboard
+
+![img_6](./answer-img/6_final_dashboard.png)
+
+The 6 panels built in the dashboard are:
+- Uptime: Monitoring the backend and frontend services to ensure the availability.
+- 50x Errors: The total amount of 50x error responses reported.
+- 40x Errors: The total amount of 40x error responses reported.
+- CPU Usage: Looking into the average cpu consumption of the backend service per hour.
+- Memory Usage: Observing the average memory consumption of the backend service per hour.
+- Response Time: The average response time measured every 5 minutes.
