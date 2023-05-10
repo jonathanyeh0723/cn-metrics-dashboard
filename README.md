@@ -129,7 +129,7 @@ $ kubectl port-forward -n monitoring svc/prometheus-grafana --address 0.0.0.0 30
 
 See attached.
 
-## Creating SLI metrics.
+## Describe SLO/SLI
 
 SLIs (Service Level Indicators) are metrics that are used to measure the performance of a service. In the context of an SLO for monthly uptime and request response time, SLIs would be the specific metrics that are used to measure these two aspects of service performance.
 
