@@ -41,7 +41,6 @@ $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/co
 
 $ kubectl get svc -n observability
 $ kubectl get deploy
-
 ```
 
 Open another terminal (T2). Securely copy the K8s manifest config files to the VM. Deploy the service.
@@ -92,14 +91,19 @@ backend-app    3/3     3            3           2m26s
 OK! All done. Let's start to use Prometheus, Grafana, and Jaeger.
 
 In terminal 1, type below command to port forward prometheus-grafana service.
+
 ```
 $ kubectl port-forward -n monitoring svc/prometheus-grafana --address 0.0.0.0 3000:80
 ```
 
-Keep going to port forward jaeger tracing service to view in the browser.
+Open the browser and type in `127.0.0.1:3000` to actually see the dashboard. Note that the default username and password is `admin` and `prom-operator` separately.
+
+Keep going to port forward jaeger tracing service in terminal 2. 
 ```
 $ kubectl port-forward -n observability service/cn-traces-query --address 0.0.0.0 16686:16686
 ```
+
+Open another window and input `127.0.0.1:8088` as URL to check Jaeger took effect.
 
 ## Verify the monitoring installation
 
@@ -161,3 +165,114 @@ Concretely, we can address as following:
 
 By tracking these metrics, you can get a better understanding of how well your application is performing and identify areas for improvement. Do you have any questions about these metrics or how they are used to measure SLIs?
 
+## Create a Dashboard to measure our SLIs
+
+Open the browser and navigate to `127.0.0.1:3000` to create the dashboard. Editing the panels with SLIs defined.
+
+![img_4](./answer-img/4_create_dashboard_slis.png)
+
+## Tracing our Flask App
+
+Add Jaeger data source. Test whether it is correctly configured.
+
+![img_5](./answer-img/5-jager-2.png)
+
+Create and edit another panel to literally confirm Jaeger in dashboard.
+
+![img_6](./answer-img/5-jager-1.png)
+
+The Python Jaeger code (screenshot) is as following. The code is located at [reference-app/backend/app.py](https://github.com/jonathanyeh0723/cn-metrics-dashboard/blob/main/reference-app/backend/app.py)
+```
+import logging
+import os
+
+from flask import Flask, jsonify, request, Response
+from flask_opentracing import FlaskTracing
+from flask_cors import CORS
+from jaeger_client import Config
+from flask_pymongo import PyMongo
+from jaeger_client.metrics.prometheus import PrometheusMetricsFactory
+from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+
+app = Flask(__name__)
+CORS(app)
+
+app.config['MONGO_DBNAME'] = 'example-mongodb'
+app.config['MONGO_URI'] = 'mongodb://example-mongodb-svc.default.svc.cluster.local:27017/example-mongodb'
+mongo = PyMongo(app)
+
+metrics = GunicornInternalPrometheusMetrics(app)
+metrics.info("app_info", "Backend service", version="1.0.1")
+
+by_full_path_counter = metrics.counter('full_path_counter', 'counting requests by full path', labels={'full_path': lambda: request.full_path})
+by_endpoint_counter = metrics.counter('endpoint_counter', 'counting request by endpoint', labels={'endpoint': lambda: request.endpoint})
+
+logging.getLogger("").handlers = []
+logging.basicConfig(format="%(message)s", level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+JAEGER_AGENT_HOST = os.getenv('JAEGER_AGENT_HOST', 'localhost')
+
+
+def init_tracer(service):
+
+    config = Config(
+        config={
+            "sampler": {"type": "const", "param": 1},
+            "logging": True,
+            "reporter_batch_size": 1,
+        },
+        service_name=service,
+        validate=True,
+        metrics_factory=PrometheusMetricsFactory(service_name_label=service),
+    )
+
+    # this call also sets opentracing.tracer
+    return config.initialize_tracer()
+
+
+tracer = init_tracer("backend")
+flask_tracer = FlaskTracing(tracer, True, app)
+
+
+
+@app.route("/")
+@by_full_path_counter
+@by_endpoint_counter
+def homepage():
+    with tracer.start_span('hello-world'):
+        return "Hello World"
+
+@app.route('/error-500')
+@by_full_path_counter
+@by_endpoint_counter
+def error5xx():
+    with tracer.start_span('error-500'):
+       Response("error-500", status=500, mimetype='application/json')
+
+@app.route("/api")
+@by_full_path_counter
+@by_endpoint_counter
+def my_api():
+    answer = "something"
+    return jsonify(repsonse=answer)
+
+
+@app.route("/star")
+@by_full_path_counter
+@by_endpoint_counter
+def add_star():
+    star = mongo.db.stars
+    star_id = star.insert({"name": "name", "distance": "distance"})
+    new_star = star.find_one({"_id": star_id})
+    output = {"name": new_star["name"], "distance": new_star["distance"]}
+    return jsonify({"result": output})
+
+
+if __name__ == "__main__":
+    app.run(debug=True,)
+```
+
+Navigate to `127.0.0.1:8088`. This is where we can oversee what we perform Jaeger traces on the backend service.
+
+![img_4](./answer-img/5_tracing_flask.png)
