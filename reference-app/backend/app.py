@@ -9,6 +9,8 @@ from flask_pymongo import PyMongo
 from jaeger_client.metrics.prometheus import PrometheusMetricsFactory
 from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
 
+os.environ["PROMETHEUS_MULTIPROC_DIR"] = "/tmp/"
+
 app = Flask(__name__)
 CORS(app)
 
@@ -50,33 +52,26 @@ tracer = init_tracer("backend")
 flask_tracer = FlaskTracing(tracer, True, app)
 
 
-
 @app.route("/")
 @by_full_path_counter
 @by_endpoint_counter
-def homepage():
+def welcome():
     with tracer.start_span('hello-world'):
-        return "Hello World"
+        return "Hello World!"
 
-@app.route('/error-500')
-@by_full_path_counter
-@by_endpoint_counter
-def error5xx():
-    with tracer.start_span('error-500'):
-       Response("error-500", status=500, mimetype='application/json')
 
-@app.route("/api")
+@app.route("/call")
 @by_full_path_counter
 @by_endpoint_counter
 def my_api():
-    answer = "something"
-    return jsonify(repsonse=answer)
+    res = "This is to verify '/call' endpoint with json format."
+    return jsonify(repsonse=res)
 
 
-@app.route("/star")
+@app.route("/database")
 @by_full_path_counter
 @by_endpoint_counter
-def add_star():
+def access_db():
     star = mongo.db.stars
     star_id = star.insert({"name": "name", "distance": "distance"})
     new_star = star.find_one({"_id": star_id})
@@ -85,4 +80,4 @@ def add_star():
 
 
 if __name__ == "__main__":
-    app.run(debug=True,)
+    app.run(debug=True)
