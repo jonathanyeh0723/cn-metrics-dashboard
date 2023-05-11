@@ -110,9 +110,12 @@ Open another window and input `127.0.0.1:8088` as URL to check Jaeger took effec
 Run the following kubectl command to show the running pods and services for all components. 
 ```
 $ kubectl get all -n monitoring
+$ kubectl pods -n observability
+$ kubectl get pods --all-namespaces
 ```
 
 ![img_1](./answer-img/1_verify_the_monitoring_installation.png)
+![img_1](./answer-img/7_all_namespaces.png)
 
 ## Setup the Jaeger and Prometheus source
 
@@ -289,19 +292,22 @@ Description:
 
 TROUBLE TICKET
 
-Name: "Monitoring Iron Dog Logs - 2023/5/9: 400 error event occurred"
+Name: "Using Jaeger for Monitoring - 2023/5/11: 500 error event occurred"
 
-Date: 09/05/2023 09:42:13
+Date: 11/05/2023 18:52:29
 
-Subject: 400 Bad Request response. Possible reason might be `/star` endpoint request failed.
+Subject: 500 Internal Server Error. Possible reason might be `/database` endpoint request failed.
 
 Affected Area: Backend service.
 
 Severity: High
 
-Description: Client sending information with HTTP "POST" method to request access `/star` endpoint resulting error response. It is probably because MongoDB database is not available in current Kubernetes cluster. Suggest to configure the manifest and have the service up.
+Description: Client sending information with HTTP "GET" method to request access `/database` endpoint resulting error response. It is probably because MongoDB database is not available in current Kubernetes cluster. Suggest to configure the manifest and have the service up.
 
 -------------------------------------------------------------------------------------------------
+
+![img_8](./answer-img/8_err_ticket_1.png)
+![img_9](./answer-img/8_err_ticket_2.png)
 
 ## Creating SLIs and SLOs
 
