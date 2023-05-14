@@ -3,6 +3,15 @@ Using Prometheus, Jaeger, and Grafana to monitor, trace and visualize the applic
 
 ## Prerequisites
 
+Install [Virtual Box](https://www.virtualbox.org/wiki/Downloads) and [Vagrant](https://developer.hashicorp.com/vagrant/downloads?product_intent=vagrant).
+```
+$ sudo apt-get install virtualbox
+
+$ wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+$ echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+$ sudo apt update && sudo apt install vagrant
+```
+
 Open a terminal (T1). Have vagrant up. Destory existing VM if necessary.
 ```
 $ vagrant halt
