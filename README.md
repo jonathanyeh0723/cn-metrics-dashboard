@@ -345,9 +345,15 @@ Description: Client sending information with HTTP "GET" method to request access
 ![img_6](./answer-img/6_final_dashboard.png)
 
 The 6 panels built in the dashboard are:
-- Uptime: Monitoring the backend and frontend services to ensure the availability.
-- 50x Errors: The total amount of 50x error responses reported.
-- 40x Errors: The total amount of 40x error responses reported.
+- Uptime: Monitoring the backend and frontend services to ensure the availability.<br>
+  `avg(rate(container_cpu_usage_seconds_total{container="backend"}[1h]))`
+- 50x Errors: The total amount of 50x error responses reported.<br>
+  `avg(rate(container_memory_usage_bytes{container="backend"}[1h]))`
+- 40x Errors: The total amount of 40x error responses reported.<br>
+  `sum(prometheus_http_requests_total{code=~"2.*"}) / sum(prometheus_http_requests_total)`
 - CPU Usage: Looking into the average cpu consumption of the backend service per hour.
-- Memory Usage: Observing the average memory consumption of the backend service per hour.
-- Response Time: The average response time measured every 5 minutes.
+  `sum(prometheus_http_requests_total{code=~"4.*"}) / sum(prometheus_http_requests_total)`
+- Memory Usage: Observing the average memory consumption of the backend service per hour.<br>
+  `sum(prometheus_http_requests_total{code=~"5.*"}) / sum(prometheus_http_requests_total)`
+- Response Time: The average response time measured every 5 minutes.<br>
+  `sum(rate(prometheus_http_request_duration_seconds_sum[5m])) / sum(rate(prometheus_http_request_duration_seconds_count[5m]))`
